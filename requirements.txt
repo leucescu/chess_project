@@ -1,0 +1,29 @@
+numpy
+pandas
+scikit-learn
+tensorflow
+keras
+chess
+matplotlib
+jupyter
+pyqt5
+colabcode==0.3.0
+ipywidgets
+pybind11
+# Optional: Additional utility libraries
+requests          # For making HTTP requests, if needed
+# beautifulsoup4    # For web scraping, if needed
+# Optional: Code formatting and linting
+# black             # Code formatter
+# flake8            # Linting tool
+# Optional: Testing
+pytest            # Testing framework
+# Optional: Logging and debugging
+# loguru            # Logging library
+# ipdb              # Interactive debugger for IPython
+# # Optional: Environment variable management
+# python-dotenv     # For loading environment variables from .env files
+# # Optional: JSON handling
+# simplejson        # A simple, fast, extensible JSON encoder/decoder
+
+# python-dateutil   # Extensions to the standard Python datetime module
