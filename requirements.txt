@@ -7,23 +7,32 @@ chess
 matplotlib
 jupyter
 pyqt5
-colabcode==0.3.0
+colabcode
 ipywidgets
 pybind11
-# Optional: Additional utility libraries
-requests          # For making HTTP requests, if needed
-# beautifulsoup4    # For web scraping, if needed
-# Optional: Code formatting and linting
-# black             # Code formatter
-# flake8            # Linting tool
-# Optional: Testing
-pytest            # Testing framework
-# Optional: Logging and debugging
-# loguru            # Logging library
-# ipdb              # Interactive debugger for IPython
-# # Optional: Environment variable management
-# python-dotenv     # For loading environment variables from .env files
-# # Optional: JSON handling
-# simplejson        # A simple, fast, extensible JSON encoder/decoder
+requests  # For making HTTP requests, if needed
 
-# python-dateutil   # Extensions to the standard Python datetime module
+# Optional: Additional utility libraries
+beautifulsoup4  # Uncomment if you need web scraping
+
+# Optional: Code formatting and linting
+black  # Uncomment if you need code formatting
+flake8  # Uncomment if you need linting
+
+# Optional: Testing
+pytest  # Uncomment if you need testing framework
+
+# Optional: Logging and debugging
+loguru  # Uncomment if you need logging
+ipdb  # Uncomment if you need interactive debugging
+
+# Optional: Environment variable management
+python-dotenv  # Uncomment if you need environment variable management
+
+# Optional: JSON handling
+simplejson  # Uncomment if you need JSON handling
+
+# Optional: Extensions to the standard Python datetime module
+python-dateutil  # Uncomment if you need extended datetime functionality
+
+python-chess
