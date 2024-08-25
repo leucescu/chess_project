@@ -1,11 +1,14 @@
+# gui/chess_gui.py
+
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QGridLayout, QVBoxLayout, QSizePolicy
+from PyQt5.QtWidgets import QWidget, QLabel, QPushButton, QGridLayout, QVBoxLayout, QSizePolicy
 from PyQt5.QtGui import QPixmap, QColor, QPainter, QBrush, QPen
 from PyQt5.QtCore import Qt
 
 class ChessGUI(QWidget):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, return_to_menu_callback, parent=None):
+        super().__init__(parent)
+        self.return_to_menu_callback = return_to_menu_callback
         self.initUI()
 
     def initUI(self):
@@ -29,6 +32,11 @@ class ChessGUI(QWidget):
 
         # Add the grid layout widget to the main layout
         main_layout.addWidget(self.grid_layout_widget, alignment=Qt.AlignCenter)
+
+        # Add the return to menu button
+        return_button = QPushButton('Return to Main Menu')
+        return_button.clicked.connect(self.return_to_menu_callback)
+        main_layout.addWidget(return_button)
 
         # Set a fixed maximum size for the chessboard to prevent excessive expansion
         self.grid_layout_widget.setMaximumSize(800, 800)
@@ -187,12 +195,3 @@ class ChessGUI(QWidget):
         pixmap = QPixmap(f'src/gui/chess_pieces/{self.positions[(row, col)]}')
         new_size = min(self.grid_layout_widget.width(), self.grid_layout_widget.height() - 40) // 8
         self.labels[(row, col)].setPixmap(pixmap.scaled(new_size, new_size, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-
-def main():
-    app = QApplication(sys.argv)
-    ex = ChessGUI()
-    ex.show()
-    sys.exit(app.exec_())
-
-if __name__ == '__main__':
-    main()
