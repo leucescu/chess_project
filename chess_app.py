@@ -14,6 +14,7 @@ class ChessApp(QMainWindow):
         self.setWindowTitle('Chess')
         self.setWindowIcon(QIcon('src/gui/icons/icon.png'))
         self.setGeometry(300, 100, 800, 800)
+        self.setStyleSheet("QMainWindow {background-image: url('src/gui/background/background.png'); background-position: center; background-repeat: no-repeat;}")
 
         # Central widget to hold multiple screens
         self.central_widget = QStackedWidget(self)
@@ -45,11 +46,13 @@ class ChessApp(QMainWindow):
 
         # Switch to the Chess GUI screen
         self.central_widget.setCurrentWidget(self.chess_gui)
+        self.setStyleSheet("background: none;")
 
     def show_main_menu(self):
         self.chess_gui = None
         # Switch back to the main menu screen
         self.central_widget.setCurrentWidget(self.main_menu)
+        self.setStyleSheet("QMainWindow {background-image: url('src/gui/background/background.png'); background-position: center; background-repeat: no-repeat;}")
 
 def main():
     app = QApplication(sys.argv)

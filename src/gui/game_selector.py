@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QPushButton
 from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import QSize
 
 class GameSelector(QWidget):
     def __init__(self, choose_side_callback, return_to_menu_callback, parent=None):
@@ -19,6 +20,9 @@ class GameSelector(QWidget):
         white_button.setIcon(QIcon('src/gui/chess_pieces/Chess_plt60.png'))  # Add white knight icon
         black_button = QPushButton('Play as Black')
         black_button.setIcon(QIcon('src/gui/chess_pieces/Chess_pdt60.png'))  # Add black knight icon
+
+        white_button.setIconSize(QSize(128, 128))
+        black_button.setIconSize(QSize(128, 128))
 
         # Connect buttons to the callback with the respective side
         white_button.clicked.connect(lambda: self.choose_side_callback('white'))
