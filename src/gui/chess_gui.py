@@ -1,14 +1,21 @@
-# gui/chess_gui.py
-
-import sys
 from PyQt5.QtWidgets import QWidget, QLabel, QPushButton, QGridLayout, QVBoxLayout, QSizePolicy
 from PyQt5.QtGui import QPixmap, QColor, QPainter, QBrush, QPen
 from PyQt5.QtCore import Qt
+from src.chessboard.chessboard import Chessboard
+
 
 class ChessGUI(QWidget):
     def __init__(self, return_to_menu_callback, parent=None):
         super().__init__(parent)
         self.return_to_menu_callback = return_to_menu_callback
+        self.chessboard = Chessboard()
+        self.selected_piece = None  # To store the selected piece's position
+        self.selected_piece_label = None  # To store the label for the selected piece
+        # Create a mapping of FEN characters to piece image filenames
+        self.fen_to_image = {
+            'P': 'Chess_plt60.png', 'N': 'Chess_nlt60.png', 'B': 'Chess_blt60.png', 'R': 'Chess_rlt60.png', 'Q': 'Chess_qlt60.png', 'K': 'Chess_klt60.png',
+            'p': 'Chess_pdt60.png', 'n': 'Chess_ndt60.png', 'b': 'Chess_bdt60.png', 'r': 'Chess_rdt60.png', 'q': 'Chess_qdt60.png', 'k': 'Chess_kdt60.png'
+        }
         self.initUI()
 
     def initUI(self):
@@ -51,7 +58,7 @@ class ChessGUI(QWidget):
         self.initialize_board()
 
     def initialize_board(self):
-        """Initializes the chessboard with alternating colors, pieces, and border labels."""
+        """Initializes the chessboard with alternating colors and FEN-based pieces."""
         self.labels = {}  # Dictionary to store the labels for each square
 
         # Letters for files (columns)
@@ -83,23 +90,7 @@ class ChessGUI(QWidget):
             file_label_bottom.setFixedSize(80, 20)  # Set fixed size for labels
             self.grid_layout.addWidget(file_label_bottom, 9, col + 1)
 
-        # Dictionary to hold the initial positions with the corresponding image filenames
-        self.positions = {
-            (0, 0): 'Chess_rdt60.png', (0, 1): 'Chess_ndt60.png', (0, 2): 'Chess_bdt60.png',
-            (0, 3): 'Chess_qdt60.png', (0, 4): 'Chess_kdt60.png', (0, 5): 'Chess_bdt60.png',
-            (0, 6): 'Chess_ndt60.png', (0, 7): 'Chess_rdt60.png',
-            (1, 0): 'Chess_pdt60.png', (1, 1): 'Chess_pdt60.png', (1, 2): 'Chess_pdt60.png',
-            (1, 3): 'Chess_pdt60.png', (1, 4): 'Chess_pdt60.png', (1, 5): 'Chess_pdt60.png',
-            (1, 6): 'Chess_pdt60.png', (1, 7): 'Chess_pdt60.png',
-            (6, 0): 'Chess_plt60.png', (6, 1): 'Chess_plt60.png', (6, 2): 'Chess_plt60.png',
-            (6, 3): 'Chess_plt60.png', (6, 4): 'Chess_plt60.png', (6, 5): 'Chess_plt60.png',
-            (6, 6): 'Chess_plt60.png', (6, 7): 'Chess_plt60.png',
-            (7, 0): 'Chess_rlt60.png', (7, 1): 'Chess_nlt60.png', (7, 2): 'Chess_blt60.png',
-            (7, 3): 'Chess_qlt60.png', (7, 4): 'Chess_klt60.png', (7, 5): 'Chess_blt60.png',
-            (7, 6): 'Chess_nlt60.png', (7, 7): 'Chess_rlt60.png'
-        }
-
-        # Add the chess pieces to the grid
+        # Initialize empty labels for all squares
         for row in range(8):
             for col in range(8):
                 label = QLabel()
@@ -112,15 +103,11 @@ class ChessGUI(QWidget):
                 else:
                     label.setStyleSheet(f"background-color: {self.dark_color.name()};")
 
-                # Check if there is a piece at the current position
-                if (row, col) in self.positions:
-                    pixmap = QPixmap(f'src/gui/chess_pieces/{self.positions[(row, col)]}')
-                    if pixmap.isNull():
-                        print(f"Failed to load {self.positions[(row, col)]}")
-                    label.setPixmap(pixmap)
-
                 self.grid_layout.addWidget(label, row + 1, col + 1)
                 self.labels[(row, col)] = label
+
+        # Load the initial board position using FEN from Chessboard
+        self.load_fen(self.chessboard.to_fen())
 
     def resizeEvent(self, event):
         """Handle the window resize event to dynamically adjust the size of the chessboard and pieces."""
@@ -143,7 +130,7 @@ class ChessGUI(QWidget):
         super().resizeEvent(event)
 
     def mousePressEvent(self, event):
-        """Handle the mouse click event to highlight the clicked piece."""
+        """Handle the mouse click event to highlight the clicked piece or move it."""
         x_offset = 20  # Rank labels width
         y_offset = 20  # File labels height
 
@@ -151,28 +138,56 @@ class ChessGUI(QWidget):
         grid_widget_height = self.grid_layout_widget.height() - 2 * y_offset
         new_size = min(grid_widget_width, grid_widget_height) // 8
 
+        # Get the clicked square coordinates (x, y)
         x = (event.x() - self.grid_layout_widget.x() - x_offset) // new_size
         y = (event.y() - self.grid_layout_widget.y() - y_offset) // new_size
 
         # Check if the click is within the valid chessboard area
         if 0 <= x < 8 and 0 <= y < 8:
-            if (y, x) in self.positions:
-                if self.last_clicked == (y, x):
-                    # If the same square is clicked again, remove the highlight and redraw the piece
-                    self.reset_highlight(y, x)
-                    self.last_clicked = None  # Reset the last clicked square
-                else:
-                    # Reset the last clicked square highlight
-                    if self.last_clicked:
-                        self.reset_highlight(*self.last_clicked)
+            clicked_square = (y, x)
 
-                    # Highlight the current piece
+            if self.selected_piece is None:
+                # First click: selecting a piece
+                if clicked_square in self.positions:
+                    # Highlight the selected piece
                     self.apply_highlight(y, x)
+                    self.selected_piece = clicked_square  # Store the selected piece position
+                    self.selected_piece_label = self.labels[clicked_square]  # Store the label for the selected piece
+                    print(f"Piece selected at: {self.selected_piece}")
+            else:
+                # Second click: Check if clicked on the same square
+                if self.selected_piece == clicked_square:
+                    self.reset_highlight(*self.selected_piece)
+                    self.selected_piece = None 
+                    # The same square was clicked; don't reset the highlight, just ignore
+                    print(f"Same piece selected at: {self.selected_piece}. No action taken.")
+                else:
+                    # Second click: moving the piece to the target square
+                    print(f"Move to: {clicked_square}")
 
-                    # Store the current position as the last clicked
-                    self.last_clicked = (y, x)
+                    # Move the piece and update the board
+                    self.make_move(self.selected_piece, clicked_square)
 
-        print(f"Clicked on cell: ({y}, {x})")
+                    # Reset the highlight after the move
+                    self.reset_highlight(*self.selected_piece)
+                    self.selected_piece = None  # Reset after move
+                    self.selected_piece_label = None  # Clear the selected label
+
+
+    def make_move(self, start_square, end_square):
+        """Handle the movement of the piece on the board."""
+        start_row, start_col = start_square
+        end_row, end_col = end_square
+
+        # Convert (row, col) into 1D index for your Chessboard class
+        start_index = start_row * 8 + start_col
+        end_index = end_row * 8 + end_col
+
+        # Call the Chessboard class to make the move
+        self.chessboard.make_move(start_index, end_index)
+
+        # After the move is made, update the GUI
+        self.load_fen(self.chessboard.to_fen())
 
     def apply_highlight(self, row, col):
         """Apply a highlight effect directly to the piece."""
@@ -192,6 +207,57 @@ class ChessGUI(QWidget):
 
     def reset_highlight(self, row, col):
         """Resets the highlight of a piece by reloading and redrawing the original image."""
-        pixmap = QPixmap(f'src/gui/chess_pieces/{self.positions[(row, col)]}')
-        new_size = min(self.grid_layout_widget.width(), self.grid_layout_widget.height() - 40) // 8
-        self.labels[(row, col)].setPixmap(pixmap.scaled(new_size, new_size, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        if (row, col) in self.positions:  # Check if there is a piece at this location
+            pixmap = QPixmap(f'src/gui/chess_pieces/{self.positions[(row, col)]}')
+            new_size = min(self.grid_layout_widget.width(), self.grid_layout_widget.height() - 40) // 8
+            self.labels[(row, col)].setPixmap(pixmap.scaled(new_size, new_size, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        else:
+            # If no piece is there, clear the label
+            self.labels[(row, col)].clear()
+
+    def load_fen(self, fen):
+        """Load the board pieces from a FEN string and update the GUI."""
+        # Split the FEN string into its components
+        fen_rows = fen.split(" ")[0].split("/")  # Extract only the piece placement part of FEN
+        
+        # Clear existing pieces
+        self.positions = {}
+
+        # Iterate over each rank in the FEN string
+        for row, fen_row in enumerate(fen_rows):
+            col = 0  # Reset column for each row
+            for char in fen_row:
+                if char.isdigit():
+                    # Empty squares (represented by numbers)
+                    col += int(char)
+                else:
+                    # Place piece on the board
+                    self.positions[(row, col)] = self.fen_to_image[char]
+                    col += 1  # Move to the next column
+
+        # Refresh the board display
+        self.update_board_display()
+
+
+    def update_board_display(self):
+        """Update the board display based on the self.positions dictionary."""
+        new_size = min(self.grid_layout_widget.width(), self.grid_layout_widget.height() - 40) // 8  # Consistent piece size calculation
+
+        for row in range(8):
+            for col in range(8):
+                label = self.labels[(row, col)]
+
+                # Set the background color of the square
+                if (row + col) % 2 == 0:
+                    label.setStyleSheet(f"background-color: {self.light_color.name()};")
+                else:
+                    label.setStyleSheet(f"background-color: {self.dark_color.name()};")
+
+                # Check if there is a piece at the current position
+                if (row, col) in self.positions:
+                    pixmap = QPixmap(f'src/gui/chess_pieces/{self.positions[(row, col)]}')
+                    # Scale the pixmap to fit the current square size
+                    label.setPixmap(pixmap.scaled(new_size, new_size, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+                else:
+                    label.clear()  # Clear the label if there's no piece
+
