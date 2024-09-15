@@ -14,7 +14,7 @@ class MainMenu(QWidget):
         play_button.clicked.connect(self.start_game_callback)
         layout.addWidget(play_button)
 
-        # Settings button (you can implement this later)
+        # Settings button
         settings_button = QPushButton('Settings')
         layout.addWidget(settings_button)
 

@@ -1,9 +1,17 @@
 import numpy as np
 
 class Chessboard:
-    def __init__(self):
+    def __init__(self, player_side):
         """1D list representation of the chessboard."""
-        self.board = [
+        self.init_board(player_side)
+        self.to_move = "white"
+        self.castling_rights = "KQkq"  # Both sides can castle kingside and queenside
+        self.en_passant = "-"  # No en passant target square initially
+        self.halfmove_clock = 0  # Halfmove clock for the 50-move rule
+        self.fullmove_number = 1  # Fullmove number starts at 1
+
+    def init_board(self, player_side):
+        board = [
             'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r',   # Rank 8
             'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p',   # Rank 7
             '.', '.', '.', '.', '.', '.', '.', '.',   # Rank 6
@@ -13,11 +21,10 @@ class Chessboard:
             'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P',   # Rank 2
             'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'    # Rank 1
         ]
-        self.to_move = "white"
-        self.castling_rights = "KQkq"  # Both sides can castle kingside and queenside
-        self.en_passant = "-"  # No en passant target square initially
-        self.halfmove_clock = 0  # Halfmove clock for the 50-move rule
-        self.fullmove_number = 1  # Fullmove number starts at 1
+        if player_side == "white":
+            self.board = board
+        else:
+            self.board = board[::-1]
 
     def print_board(self):
         """Print the current board state."""

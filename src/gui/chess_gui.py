@@ -5,10 +5,11 @@ from src.chessboard.chessboard import Chessboard
 
 
 class ChessGUI(QWidget):
-    def __init__(self, return_to_menu_callback, parent=None):
+    def __init__(self, return_to_menu_callback, player_side, parent=None):
         super().__init__(parent)
         self.return_to_menu_callback = return_to_menu_callback
-        self.chessboard = Chessboard()
+        self.player_side = player_side
+        self.chessboard = Chessboard(self.player_side)
         self.selected_piece = None  # To store the selected piece's position
         self.selected_piece_label = None  # To store the label for the selected piece
         # Create a mapping of FEN characters to piece image filenames
@@ -19,8 +20,6 @@ class ChessGUI(QWidget):
         self.initUI()
 
     def initUI(self):
-        self.setWindowTitle('Chess GUI')
-
         # Set the size of the ChessGUI window
         self.setGeometry(560, 140, 800, 800)  # Initial size
 
@@ -60,11 +59,13 @@ class ChessGUI(QWidget):
     def initialize_board(self):
         """Initializes the chessboard with alternating colors and FEN-based pieces."""
         self.labels = {}  # Dictionary to store the labels for each square
-
-        # Letters for files (columns)
-        files = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
-        # Numbers for ranks (rows)
-        ranks = ['8', '7', '6', '5', '4', '3', '2', '1']
+        if self.player_side == 'white':
+            files = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+            ranks = ['8', '7', '6', '5', '4', '3', '2', '1']
+        else:
+            # Invert the files and ranks for black player
+            files = ['H', 'G', 'F', 'E', 'D', 'C', 'B', 'A']
+            ranks = ['1', '2', '3', '4', '5', '6', '7', '8']
 
         # Add rank labels (numbers) on left and right
         for row in range(8):
@@ -98,7 +99,11 @@ class ChessGUI(QWidget):
                 label.setAlignment(Qt.AlignCenter)
 
                 # Set the background color of the square
-                if (row + col) % 2 == 0:
+                if self.player_side == 'white':
+                    c = 0
+                else:
+                    c = 1
+                if (row + col + c) % 2 == 0:
                     label.setStyleSheet(f"background-color: {self.light_color.name()};")
                 else:
                     label.setStyleSheet(f"background-color: {self.dark_color.name()};")
@@ -248,7 +253,12 @@ class ChessGUI(QWidget):
                 label = self.labels[(row, col)]
 
                 # Set the background color of the square
-                if (row + col) % 2 == 0:
+                if self.player_side == 'white':
+                    c = 0
+                else:
+                    c = 1
+
+                if (row + col + c) % 2 == 0:
                     label.setStyleSheet(f"background-color: {self.light_color.name()};")
                 else:
                     label.setStyleSheet(f"background-color: {self.dark_color.name()};")
